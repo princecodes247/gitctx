@@ -1,0 +1,28 @@
+{
+  "name": "gitctx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/cli/index.js",
+  "type": "module",
+  "bin": {
+    "gitctx": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli/index.ts",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "dependencies": {
+    "@inquirer/prompts": "^8.5.2",
+    "chalk": "^6.0.0",
+    "commandstruct": "^1.1.2",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.7"
+  }
+}
