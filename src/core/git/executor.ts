@@ -12,8 +12,9 @@ export function executeGit(args: string[], profile: Profile | null): Promise<num
       
       if (env.GITCTX_HTTPS_TOKEN) {
         // Inject credential helper to git arguments
+        // We MUST prepend an empty credential.helper first to clear any system/global helpers (like OSX Keychain or gh cli)
         const helperCmd = `!f() { echo "username=\${GITCTX_HTTPS_USER:-git}"; echo "password=\${GITCTX_HTTPS_TOKEN}"; }; f`;
-        modifiedArgs.unshift("-c", `credential.helper=${helperCmd}`);
+        modifiedArgs.unshift("-c", "credential.helper=", "-c", `credential.helper=${helperCmd}`);
       }
 
       const child = spawn(gitPath, modifiedArgs, {
