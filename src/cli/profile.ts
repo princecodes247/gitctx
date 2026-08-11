@@ -4,7 +4,9 @@ import { saveProfile, listProfiles, removeProfile, loadProfile } from "../core/p
 import { getKeysDir } from "../core/config/index.js";
 import { startDeviceFlow, pollForToken } from "../providers/github-auth.js";
 import { startBitbucketAuth } from "../providers/bitbucket-auth.js";
+import { execSync } from "child_process";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import chalk from "chalk";
 
@@ -74,10 +76,26 @@ export const profileCmd = command("profile")
             });
 
             if (githubAuth === "existing_ssh") {
+              authType = "ssh";
               sshKey = sshKey || await input({ message: "Path to SSH key:", default: "~/.ssh/id_ed25519" });
             } else if (githubAuth === "new_ssh") {
-              console.log(chalk.yellow("Creating new SSH keys is not fully implemented yet."));
+              authType = "ssh";
               sshKey = sshKey || await input({ message: "Path to save new SSH key:", default: `~/.gitctx/keys/${profileName}` });
+              const absoluteKeyPath = sshKey.replace(/^~/, os.homedir());
+              
+              const keyDir = path.dirname(absoluteKeyPath);
+              if (!fs.existsSync(keyDir)) {
+                fs.mkdirSync(keyDir, { recursive: true });
+              }
+              
+              console.log(chalk.blue(`\nGenerating new SSH key at ${absoluteKeyPath}...`));
+              execSync(`ssh-keygen -t ed25519 -C "${gitEmail}" -f "${absoluteKeyPath}" -N ""`, { stdio: "pipe" });
+              
+              const pubKey = fs.readFileSync(`${absoluteKeyPath}.pub`, "utf8");
+              console.log(chalk.green("✓ SSH key generated successfully!\n"));
+              console.log(chalk.bold("Public Key:"));
+              console.log(pubKey);
+              console.log(`Please copy the public key above and add it to your GitHub settings.\n`);
             } else if (githubAuth === "login") {
               const deviceFlow = await startDeviceFlow();
               console.log(`\nPlease open: ${chalk.blue.underline(deviceFlow.verification_uri)}`);
@@ -107,10 +125,26 @@ export const profileCmd = command("profile")
             });
 
             if (bbAuth === "existing_ssh") {
+              authType = "ssh";
               sshKey = sshKey || await input({ message: "Path to SSH key:", default: "~/.ssh/id_ed25519" });
             } else if (bbAuth === "new_ssh") {
-              console.log(chalk.yellow("Creating new SSH keys is not fully implemented yet."));
+              authType = "ssh";
               sshKey = sshKey || await input({ message: "Path to save new SSH key:", default: `~/.gitctx/keys/${profileName}` });
+              const absoluteKeyPath = sshKey.replace(/^~/, os.homedir());
+              
+              const keyDir = path.dirname(absoluteKeyPath);
+              if (!fs.existsSync(keyDir)) {
+                fs.mkdirSync(keyDir, { recursive: true });
+              }
+              
+              console.log(chalk.blue(`\nGenerating new SSH key at ${absoluteKeyPath}...`));
+              execSync(`ssh-keygen -t ed25519 -C "${gitEmail}" -f "${absoluteKeyPath}" -N ""`, { stdio: "pipe" });
+              
+              const pubKey = fs.readFileSync(`${absoluteKeyPath}.pub`, "utf8");
+              console.log(chalk.green("✓ SSH key generated successfully!\n"));
+              console.log(chalk.bold("Public Key:"));
+              console.log(pubKey);
+              console.log(`Please copy the public key above and add it to your Bitbucket settings.\n`);
             } else if (bbAuth === "login") {
               const token = await startBitbucketAuth();
               
