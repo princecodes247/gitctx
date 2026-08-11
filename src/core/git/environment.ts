@@ -1,5 +1,5 @@
 import { Profile } from "../profiles/profile.js";
-import { getRealGitExecutable } from "./executable.js";
+import fs from "fs";
 
 export function createGitEnvironment(profile: Profile | null): NodeJS.ProcessEnv {
   const env = { ...process.env };
@@ -14,6 +14,10 @@ export function createGitEnvironment(profile: Profile | null): NodeJS.ProcessEnv
 
     if (profile.auth.type === "ssh" && profile.auth.key) {
       env.GIT_SSH_COMMAND = `ssh -i ${profile.auth.key} -o IdentitiesOnly=yes`;
+    } else if (profile.auth.type === "https" && profile.auth.key && fs.existsSync(profile.auth.key)) {
+      const token = fs.readFileSync(profile.auth.key, "utf8").trim();
+      env.GITCTX_HTTPS_TOKEN = token;
+      env.GITCTX_HTTPS_USER = profile.identity.name;
     }
   }
 

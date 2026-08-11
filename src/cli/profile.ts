@@ -1,7 +1,10 @@
 import { command, arg, flag } from "commandstruct";
 import { input, select, confirm } from "@inquirer/prompts";
 import { saveProfile, listProfiles, removeProfile, loadProfile } from "../core/profiles/store.js";
+import { getKeysDir } from "../core/config/index.js";
+import { startDeviceFlow, pollForToken } from "../providers/github-auth.js";
 import fs from "fs";
+import path from "path";
 import chalk from "chalk";
 
 function listAction() {
@@ -46,7 +49,7 @@ export const profileCmd = command("profile")
           const gitEmail = flags.email || await input({ message: "Git email:" });
 
           console.log("\nAuthentication method:");
-          const authType = await select({
+          let authType = await select({
             message: "Select authentication method",
             choices: [
               { name: "SSH", value: "ssh" },
@@ -75,7 +78,19 @@ export const profileCmd = command("profile")
               console.log(chalk.yellow("Creating new SSH keys is not fully implemented yet."));
               sshKey = sshKey || await input({ message: "Path to save new SSH key:", default: `~/.gitctx/keys/${profileName}` });
             } else if (githubAuth === "login") {
-              console.log(chalk.yellow("Login with GitHub (OAuth/Device flow) is not fully implemented yet."));
+              const deviceFlow = await startDeviceFlow();
+              console.log(`\nPlease open: ${chalk.blue.underline(deviceFlow.verification_uri)}`);
+              console.log(`And enter code: ${chalk.bold.yellow(deviceFlow.user_code)}\n`);
+              console.log("Waiting for authentication...");
+              
+              const token = await pollForToken(deviceFlow.device_code, deviceFlow.interval);
+              
+              const tokenPath = path.join(getKeysDir(), `${profileName}.token`);
+              fs.writeFileSync(tokenPath, token, { mode: 0o600 });
+              
+              sshKey = tokenPath;
+              authType = "https"; // Force HTTPS for token-based auth
+              console.log(chalk.green("✓ Authenticated successfully with GitHub."));
             }
           }
 

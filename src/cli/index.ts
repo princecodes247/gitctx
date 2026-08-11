@@ -33,25 +33,25 @@ async function main() {
   const args = process.argv.slice(2);
   const isGitCtxCommand = args.length > 0 && gitctxCommands.includes(args[0]);
 
+  const prog = program("gitctx")
+    .describe("Context-aware Git identities and authentication.")
+    .commands(
+      setupCmd,
+      profileCmd,
+      linkCmd,
+      unlinkCmd,
+      statusCmd,
+      explainCmd,
+      doctorCmd,
+      runCmd,
+      realCmd,
+      enableCmd,
+      disableCmd
+    )
+    .build();
   if (isGitCtxCommand) {
     // We are running a gitctx command
     ensureConfigDirs();
-    const prog = program("gitctx")
-      .describe("Context-aware Git identities and authentication.")
-      .commands(
-        setupCmd as any,
-        profileCmd as any,
-        linkCmd as any,
-        unlinkCmd as any,
-        statusCmd as any,
-        explainCmd as any,
-        doctorCmd as any,
-        runCmd as any,
-        realCmd as any,
-        enableCmd as any,
-        disableCmd as any
-      )
-      .build();
 
     prog.run();
   } else {
