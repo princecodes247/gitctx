@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-const GITHUB_CLIENT_ID = "Ov23liJd5YtzgrPvaxcZ";
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || "Ov23liJd5YtzgrPvaxcZ";
 
 export interface DeviceFlowStartResponse {
   device_code: string;

@@ -3,6 +3,7 @@ import { input, select, confirm } from "@inquirer/prompts";
 import { saveProfile, listProfiles, removeProfile, loadProfile } from "../core/profiles/store.js";
 import { getKeysDir } from "../core/config/index.js";
 import { startDeviceFlow, pollForToken } from "../providers/github-auth.js";
+import { startBitbucketAuth } from "../providers/bitbucket-auth.js";
 import fs from "fs";
 import path from "path";
 import chalk from "chalk";
@@ -91,6 +92,34 @@ export const profileCmd = command("profile")
               sshKey = tokenPath;
               authType = "https"; // Force HTTPS for token-based auth
               console.log(chalk.green("✓ Authenticated successfully with GitHub."));
+            }
+          } else if (provider.toLowerCase() === "bitbucket") {
+            console.log("\nBitbucket authentication\n");
+            console.log("GitCtx needs to authenticate this profile.\n");
+
+            const bbAuth = await select({
+              message: "Choose authentication flow",
+              choices: [
+                { name: "Login with Bitbucket", value: "login" },
+                { name: "Use existing SSH key", value: "existing_ssh" },
+                { name: "Create new SSH key", value: "new_ssh" }
+              ]
+            });
+
+            if (bbAuth === "existing_ssh") {
+              sshKey = sshKey || await input({ message: "Path to SSH key:", default: "~/.ssh/id_ed25519" });
+            } else if (bbAuth === "new_ssh") {
+              console.log(chalk.yellow("Creating new SSH keys is not fully implemented yet."));
+              sshKey = sshKey || await input({ message: "Path to save new SSH key:", default: `~/.gitctx/keys/${profileName}` });
+            } else if (bbAuth === "login") {
+              const token = await startBitbucketAuth();
+              
+              const tokenPath = path.join(getKeysDir(), `${profileName}.token`);
+              fs.writeFileSync(tokenPath, token, { mode: 0o600 });
+              
+              sshKey = tokenPath;
+              authType = "https"; // Force HTTPS for token-based auth
+              console.log(chalk.green("✓ Authenticated successfully with Bitbucket."));
             }
           }
 

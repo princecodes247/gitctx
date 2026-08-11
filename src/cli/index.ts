@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "dotenv/config";
 import { program } from "commandstruct";
 import { setupCmd } from "./setup.js";
 import { profileCmd } from "./profile.js";
