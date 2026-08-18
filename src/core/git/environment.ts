@@ -13,7 +13,8 @@ export function createGitEnvironment(profile: Profile | null): NodeJS.ProcessEnv
     env.GIT_COMMITTER_EMAIL = profile.identity.email;
 
     if (profile.auth.type === "ssh" && profile.auth.key) {
-      env.GIT_SSH_COMMAND = `ssh -i ${profile.auth.key} -o IdentitiesOnly=yes`;
+      const expandedKey = profile.auth.key.replace(/^~/, process.env.HOME || "");
+      env.GIT_SSH_COMMAND = `ssh -i "${expandedKey}" -o IdentitiesOnly=yes`;
     } else if (profile.auth.type === "https" && profile.auth.key && fs.existsSync(profile.auth.key)) {
       const token = fs.readFileSync(profile.auth.key, "utf8").trim();
       env.GITCTX_HTTPS_TOKEN = token;
